@@ -1,7 +1,7 @@
 # Donations App
 
 A full-stack donations and operations dashboard built with React/Vite, FastAPI,
-PostgreSQL, Redis, Nginx, and Docker Compose.
+PostgreSQL, Redis, Nginx, and Docker Compose. Test deployment.
 
 ## Architecture
 
