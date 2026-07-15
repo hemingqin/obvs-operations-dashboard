@@ -36,8 +36,8 @@ async def notifications_websocket(websocket: WebSocket):
 
     try:
         user = get_user_from_token(token)
-    except Exception:
-        print(type(e).__name__, str(e))
+    except Exception as e:
+        print("WEBSOCKET_AUTH_ERROR:", type(e).__name__, str(e), flush=True)
         await websocket.close(code=1008)
         return
 
