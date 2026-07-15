@@ -4,6 +4,9 @@ from sqlalchemy.orm import Session
 from errors import raise_api_error
 from repository.notification_repository import create_notification
 from repository.service_request_repository import (
+    ServiceRequestClaimConflict,
+    ServiceRequestNotFound,
+    claim_service_request as claim_service_request_record,
     create_service_request as create_service_request_record,
     list_service_requests as list_service_request_records,
     list_service_requests_for_user,
@@ -49,3 +52,20 @@ def create_service_request(db: Session, payload: ServiceRequestCreate, user: Cur
         publish_notification_created(volunteer_notification)
 
     return service_request
+
+
+def claim_service_request(db: Session, request_id: int, user: CurrentUser):
+    try:
+        return claim_service_request_record(db, request_id, user.id)
+    except ServiceRequestNotFound:
+        raise_api_error(
+            status.HTTP_404_NOT_FOUND,
+            "SERVICE_REQUEST_NOT_FOUND",
+            "Service request not found",
+        )
+    except ServiceRequestClaimConflict:
+        raise_api_error(
+            status.HTTP_409_CONFLICT,
+            "SERVICE_REQUEST_NOT_CLAIMABLE",
+            "Service request is already assigned or is not claimable",
+        )
