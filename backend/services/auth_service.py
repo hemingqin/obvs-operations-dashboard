@@ -56,7 +56,8 @@ def get_user_from_token(token: str) -> CurrentUser:
         payload = jwt.decode(token, settings.jwt_secret, algorithms=[JWT_ALGORITHM])
         user_id = payload.get("user_id")
         role = payload.get("role")
-    except jwt.InvalidTokenError:
+    except jwt.InvalidTokenError as e:
+        print(type(e).__name__, str(e), flush=True)
         log_event(logger, "auth_failure", reason="invalid_token")
         raise_api_error(
             status.HTTP_401_UNAUTHORIZED,
