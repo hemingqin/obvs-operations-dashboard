@@ -29,7 +29,10 @@ def notifications(
 
 @router.websocket('/notifications/ws')
 async def notifications_websocket(websocket: WebSocket):
+    print("ENTER WEBSOCKET", flush=True)
+
     token = websocket.query_params.get("token")
+    print("TOKEN PRESENT:", bool(token), flush=True)
     if not token:
         await websocket.close(code=1008)
         return
