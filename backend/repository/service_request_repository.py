@@ -1,18 +1,7 @@
 from sqlalchemy.orm import Session
 
-from models import ServiceRequest, User, VolunteerProfile
+from models import ServiceRequest, User
 from schemas import ServiceRequestCreate
-
-CLAIMABLE_STATUSES = {"Open", "OPEN", "UNASSIGNED"}
-ASSIGNED_STATUS = "Assigned"
-
-
-class ServiceRequestNotFound(Exception):
-    pass
-
-
-class ServiceRequestClaimConflict(Exception):
-    pass
 
 DEFAULT_SERVICE_REQUESTS = [
     {
@@ -88,44 +77,5 @@ def create_service_request(
     )
     db.add(service_request)
     db.commit()
-    db.refresh(service_request)
-    return service_request
-
-
-def claim_service_request(
-    db: Session,
-    request_id: int,
-    volunteer_id: int,
-) -> ServiceRequest:
-    with db.begin():
-        service_request = (
-            db.query(ServiceRequest)
-            .filter(ServiceRequest.id == request_id)
-            # with_for_update locks this row until the transaction completes,
-            # preventing two volunteers from claiming it concurrently.
-            .with_for_update()
-            .first()
-        )
-        if service_request is None:
-            raise ServiceRequestNotFound()
-
-        if (
-            service_request.status not in CLAIMABLE_STATUSES
-            or service_request.assignee_user_id is not None
-        ):
-            raise ServiceRequestClaimConflict()
-
-        volunteer = db.get(User, volunteer_id)
-        profile = db.get(VolunteerProfile, volunteer_id)
-        full_name = profile.full_name.strip() if profile and profile.full_name else ""
-        assignee_name = full_name or (
-            volunteer.username if volunteer is not None else str(volunteer_id)
-        )
-
-        service_request.status = ASSIGNED_STATUS
-        service_request.assignee_user_id = volunteer_id
-        service_request.assignee_name = assignee_name
-        db.add(service_request)
-
     db.refresh(service_request)
     return service_request
