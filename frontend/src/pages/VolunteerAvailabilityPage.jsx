@@ -58,7 +58,7 @@ function VolunteerAvailabilityPage() {
 
       <DataTableShell
         title="Weekly availability editor"
-        description="Availability now persists through the volunteer availability backend endpoints."
+        description="Changes are saved to your coordinator-visible schedule."
         loading={loading}
         hasRows
         actions={

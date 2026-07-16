@@ -20,7 +20,7 @@ router = APIRouter()
 
 @router.get('/donations', response_model=list[DonationRead])
 def donations(
-    limit: int = Query(20, ge=1),
+    limit: int = Query(100, ge=1),
     offset: int = Query(0, ge=0),
     db: Session = Depends(get_db),
 ):

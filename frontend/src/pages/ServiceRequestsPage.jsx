@@ -11,13 +11,29 @@ import { formatDate, useOperationsData } from "../hooks/useOperationsData.js";
 import { getToken } from "../lib/auth.js";
 import { createServiceRequest } from "../services/operationsService.js";
 
-const statusOptions = ["All", "Open", "Assigned", "In progress"];
-const priorityOptions = ["All", "High", "Medium", "Low"];
+const statusOptions = ["All", "Open", "Assigned", "In progress", "Completed", "Cancelled"];
+const priorityOptions = ["All", "Urgent", "High", "Medium", "Low"];
+
+const statusVariant = {
+  Open: "info",
+  Assigned: "warning",
+  "In progress": "success",
+  Completed: "default",
+  Cancelled: "danger"
+};
+
+const priorityVariant = {
+  Urgent: "danger",
+  High: "warning",
+  Medium: "info",
+  Low: "default"
+};
 
 function ServiceRequestsPage() {
   const { serviceRequests, loading, error, reload } = useOperationsData();
   const [statusFilter, setStatusFilter] = useState("All");
   const [priorityFilter, setPriorityFilter] = useState("All");
+  const [sortDir, setSortDir] = useState("desc");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [formError, setFormError] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -31,19 +47,25 @@ function ServiceRequestsPage() {
   });
 
   const filteredRequests = useMemo(() => {
-    return serviceRequests.filter((request) => {
+    const filtered = serviceRequests.filter((request) => {
       const matchesStatus = statusFilter === "All" || request.status === statusFilter;
       const matchesPriority = priorityFilter === "All" || request.priority === priorityFilter;
       return matchesStatus && matchesPriority;
     });
-  }, [serviceRequests, statusFilter, priorityFilter]);
+
+    return [...filtered].sort((left, right) => {
+      const leftTime = new Date(left.created_at).getTime();
+      const rightTime = new Date(right.created_at).getTime();
+      return sortDir === "asc" ? leftTime - rightTime : rightTime - leftTime;
+    });
+  }, [serviceRequests, statusFilter, priorityFilter, sortDir]);
 
   const requestMetrics = useMemo(
     () => ({
       open: serviceRequests.filter((request) => request.status === "Open").length,
       assigned: serviceRequests.filter((request) => request.status === "Assigned").length,
-      urgent: serviceRequests.filter((request) => request.priority === "High").length,
-      remote: serviceRequests.filter((request) => request.location === "Remote").length
+      highPriority: serviceRequests.filter((request) => request.priority === "High").length,
+      urgentPriority: serviceRequests.filter((request) => request.priority === "Urgent").length
     }),
     [serviceRequests]
   );
@@ -114,12 +136,7 @@ function ServiceRequestsPage() {
         eyebrow="Field operations"
         title="Service requests"
         description="Coordinate client support needs with status, priority, and assignment visibility built for nonprofit teams."
-        actions={
-          <>
-            <Badge variant="info">API connected</Badge>
-            <Button onClick={() => setDialogOpen(true)}>Create request</Button>
-          </>
-        }
+        actions={<Button onClick={() => setDialogOpen(true)}>Create request</Button>}
       />
 
       {error ? <p className="form-banner form-banner-error">{error}</p> : null}
@@ -135,17 +152,17 @@ function ServiceRequestsPage() {
         </div>
         <div className="mini-stat-card">
           <span className="summary-label">High priority</span>
-          <strong>{requestMetrics.urgent}</strong>
+          <strong>{requestMetrics.highPriority}</strong>
         </div>
         <div className="mini-stat-card">
-          <span className="summary-label">Remote cases</span>
-          <strong>{requestMetrics.remote}</strong>
+          <span className="summary-label">Urgent priority</span>
+          <strong>{requestMetrics.urgentPriority}</strong>
         </div>
       </section>
 
       <DataTableShell
         title="Active request queue"
-        description="Status and priority filters now sit on top of persisted service request records."
+        description="Filter the request queue by status and priority."
         badge={`${filteredRequests.length} requests`}
         loading={loading}
         hasRows={filteredRequests.length > 0}
@@ -200,7 +217,15 @@ function ServiceRequestsPage() {
                 <TableHead>Status</TableHead>
                 <TableHead>Location</TableHead>
                 <TableHead>Assignee</TableHead>
-                <TableHead>Created</TableHead>
+                <TableHead>
+                  <button
+                    type="button"
+                    className="table-sort-button"
+                    onClick={() => setSortDir((current) => (current === "asc" ? "desc" : "asc"))}
+                  >
+                    Created{sortDir === "asc" ? " ▲" : " ▼"}
+                  </button>
+                </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -215,19 +240,11 @@ function ServiceRequestsPage() {
                     </div>
                   </TableCell>
                   <TableCell>
-                    <Badge
-                      variant={
-                        request.priority === "High"
-                          ? "warning"
-                          : request.priority === "Medium"
-                            ? "info"
-                            : "default"
-                      }
-                    >
-                      {request.priority}
-                    </Badge>
+                    <Badge variant={priorityVariant[request.priority] || "default"}>{request.priority}</Badge>
                   </TableCell>
-                  <TableCell>{request.status}</TableCell>
+                  <TableCell>
+                    <Badge variant={statusVariant[request.status] || "default"}>{request.status}</Badge>
+                  </TableCell>
                   <TableCell>{request.location}</TableCell>
                   <TableCell>{request.assignee_name}</TableCell>
                   <TableCell>{formatDate(request.created_at)}</TableCell>
@@ -241,7 +258,7 @@ function ServiceRequestsPage() {
       <Dialog
         open={dialogOpen}
         title="Create service request"
-        description="This now persists through the FastAPI backend and PostgreSQL."
+        description="Add a new request to the active queue."
         onClose={() => {
           if (!submitting) {
             setDialogOpen(false);
@@ -300,6 +317,7 @@ function ServiceRequestsPage() {
               value={formValues.priority}
               onChange={(event) => updateField("priority", event.target.value)}
             >
+              <option value="Urgent">Urgent</option>
               <option value="High">High</option>
               <option value="Medium">Medium</option>
               <option value="Low">Low</option>

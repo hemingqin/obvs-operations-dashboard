@@ -10,7 +10,6 @@ function DashboardShell({
   onLogout,
   profile,
   unreadNotifications,
-  notificationsSocketStatus,
   children
 }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -20,7 +19,6 @@ function DashboardShell({
     <div className="dashboard-shell">
       <Sidebar
         items={navigationItems}
-        role={role}
         open={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
       />
@@ -28,10 +26,8 @@ function DashboardShell({
         <Navbar
           title={title}
           subtitle={subtitle}
-          role={role}
           profile={profile}
           unreadNotifications={unreadNotifications}
-          notificationsSocketStatus={notificationsSocketStatus}
           onMenuToggle={() => setSidebarOpen((current) => !current)}
           onLogout={onLogout}
         />

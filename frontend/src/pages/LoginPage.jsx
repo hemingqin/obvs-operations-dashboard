@@ -37,6 +37,13 @@ function LoginPage() {
     return Object.keys(nextErrors).length === 0;
   }
 
+  function handleUseDemoAccount() {
+    setUsername("admin");
+    setPassword("admin123");
+    setFieldErrors({});
+    setError("");
+  }
+
   async function handleSubmit(event) {
     event.preventDefault();
     setError("");
@@ -78,20 +85,19 @@ function LoginPage() {
   return (
     <main className="login-layout">
       <section className="login-intro">
-        <Badge variant="info">Operations portal</Badge>
-        <h1 className="login-title">Manage donations from a polished internal dashboard.</h1>
+        <Badge variant="info">Operations Platform</Badge>
+        <h1 className="login-title">Sign in to the OBVS Operations Platform.</h1>
         <p className="login-copy">
-          Review fundraising activity, add new donations, and keep notifications moving from
-          one place.
+          Coordinate donations, volunteer scheduling, and service requests from one workspace.
         </p>
         <div className="login-highlights">
           <div className="login-highlight">
-            <span className="login-highlight-value">FastAPI</span>
-            <span className="login-highlight-label">Backend contract unchanged</span>
+            <span className="login-highlight-value">Secure access</span>
+            <span className="login-highlight-label">Role-based permissions for staff and volunteers</span>
           </div>
           <div className="login-highlight">
-            <span className="login-highlight-value">JWT</span>
-            <span className="login-highlight-label">Role-aware session handling</span>
+            <span className="login-highlight-value">Real-time updates</span>
+            <span className="login-highlight-label">Stay informed as requests and donations come in</span>
           </div>
         </div>
       </section>
@@ -100,7 +106,7 @@ function LoginPage() {
         <CardHeader>
           <Badge variant="default">Sign in</Badge>
           <CardTitle>Welcome back</CardTitle>
-          <CardDescription>Use your staff or admin credentials to access the dashboard.</CardDescription>
+          <CardDescription>Access your organization workspace with your staff credentials.</CardDescription>
         </CardHeader>
         <CardContent>
           <form className="login-form" onSubmit={handleSubmit}>
@@ -129,12 +135,24 @@ function LoginPage() {
             </Button>
           </form>
 
-          <div className="credentials-card">
-            <p className="credentials-title">Development credentials</p>
-            <div className="credentials-grid">
-              <Badge variant="success">admin / admin123</Badge>
-              <Badge variant="info">staff / staff123</Badge>
+          <div className="demo-account">
+            <div className="demo-account-header">
+              <span className="demo-account-title">Demo account</span>
+              <Badge variant="info">For presentation</Badge>
             </div>
+            <dl className="demo-account-grid">
+              <div className="demo-account-field">
+                <dt>Username</dt>
+                <dd>admin</dd>
+              </div>
+              <div className="demo-account-field">
+                <dt>Password</dt>
+                <dd>admin123</dd>
+              </div>
+            </dl>
+            <Button variant="ghost" size="sm" type="button" onClick={handleUseDemoAccount}>
+              Use demo account
+            </Button>
           </div>
         </CardContent>
       </Card>

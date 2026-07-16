@@ -52,10 +52,6 @@ class NotificationRead(BaseModel):
     created_at: datetime
 
 
-class NotificationMarkReadResponse(BaseModel):
-    success: bool = True
-
-
 class ServiceRequestCreate(BaseModel):
     client_name: str
     service_type: str

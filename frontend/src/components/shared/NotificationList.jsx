@@ -5,7 +5,8 @@ import { formatDate } from "../../hooks/useOperationsData.js";
 
 const typeVariantMap = {
   donation: "success",
-  system: "info",
+  volunteer: "info",
+  system: "default",
   request: "default",
   warning: "warning"
 };
@@ -14,7 +15,9 @@ function NotificationList({
   notifications,
   loading,
   compact = false,
-  onMarkRead
+  onMarkRead,
+  onArchive,
+  archiveLabel = "Archive"
 }) {
   if (loading) {
     return <p className="empty-state">Loading notifications...</p>;
@@ -54,6 +57,11 @@ function NotificationList({
             {!notification.read && onMarkRead ? (
               <Button variant="ghost" size="sm" onClick={() => onMarkRead(notification.id)}>
                 Mark as read
+              </Button>
+            ) : null}
+            {onArchive ? (
+              <Button variant="ghost" size="sm" onClick={() => onArchive(notification.id)}>
+                {archiveLabel}
               </Button>
             ) : null}
           </div>

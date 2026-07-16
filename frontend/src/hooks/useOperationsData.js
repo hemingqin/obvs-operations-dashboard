@@ -154,7 +154,9 @@ export function useOperationsData() {
       largestDonation,
       latestDonation: donations[0] || null,
       sentNotifications,
-      openServiceRequests: serviceRequests.filter((item) => item.status !== "Resolved").length
+      openServiceRequests: serviceRequests.filter(
+        (item) => item.status !== "Completed" && item.status !== "Cancelled"
+      ).length
     };
   }, [donations, notifications, serviceRequests]);
 

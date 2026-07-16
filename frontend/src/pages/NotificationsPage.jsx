@@ -1,28 +1,81 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import PageHeader from "../components/layout/PageHeader.jsx";
 import DataTableShell from "../components/shared/DataTableShell.jsx";
 import NotificationList from "../components/shared/NotificationList.jsx";
-import Badge from "../components/ui/Badge.jsx";
 import Button from "../components/ui/Button.jsx";
+import Input from "../components/ui/Input.jsx";
 import { useOperationsData } from "../hooks/useOperationsData.js";
 import { getToken } from "../lib/auth.js";
+import { cn } from "../lib/utils.js";
 import { markNotificationRead } from "../services/operationsService.js";
+
+const ARCHIVE_STORAGE_KEY = "obvs-archived-notifications";
+
+const categoryFilters = [
+  { value: "All", predicate: () => true },
+  { value: "Unread", predicate: (notification) => !notification.read },
+  { value: "Read", predicate: (notification) => notification.read },
+  { value: "Priority", predicate: (notification) => notification.type === "warning" },
+  { value: "Donation", predicate: (notification) => notification.type === "donation" },
+  { value: "Volunteer", predicate: (notification) => notification.type === "volunteer" },
+  { value: "Service Request", predicate: (notification) => notification.type === "request" },
+  { value: "System", predicate: (notification) => notification.type === "system" }
+];
+
+function loadArchivedIds() {
+  try {
+    return new Set(JSON.parse(localStorage.getItem(ARCHIVE_STORAGE_KEY) || "[]"));
+  } catch {
+    return new Set();
+  }
+}
+
+function persistArchivedIds(ids) {
+  localStorage.setItem(ARCHIVE_STORAGE_KEY, JSON.stringify(Array.from(ids)));
+}
 
 function NotificationsPage() {
   const {
     notifications,
     loading,
     error,
-    notificationSource,
     notificationsError,
-    notificationsSocketStatus,
     updateNotification
   } = useOperationsData();
+
+  const [search, setSearch] = useState("");
+  const [category, setCategory] = useState("All");
+  const [showArchived, setShowArchived] = useState(false);
+  const [archivedIds, setArchivedIds] = useState(loadArchivedIds);
 
   const unreadCount = useMemo(
     () => notifications.filter((notification) => !notification.read).length,
     [notifications]
   );
+
+  const visibleNotifications = useMemo(() => {
+    const query = search.trim().toLowerCase();
+    const matchesCategory = categoryFilters.find((option) => option.value === category)?.predicate || (() => true);
+
+    return notifications
+      .filter((notification) => archivedIds.has(notification.id) === showArchived)
+      .filter((notification) => !query || notification.message.toLowerCase().includes(query))
+      .filter(matchesCategory)
+      .sort((left, right) => new Date(right.created_at) - new Date(left.created_at));
+  }, [notifications, archivedIds, showArchived, search, category]);
+
+  function toggleArchive(id) {
+    setArchivedIds((current) => {
+      const next = new Set(current);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      persistArchivedIds(next);
+      return next;
+    });
+  }
 
   async function handleMarkRead(id) {
     try {
@@ -37,7 +90,7 @@ function NotificationsPage() {
   }
 
   async function handleMarkAllRead() {
-    const unreadIds = notifications
+    const unreadIds = visibleNotifications
       .filter((notification) => !notification.read)
       .map((notification) => notification.id);
 
@@ -49,23 +102,26 @@ function NotificationsPage() {
       <PageHeader
         eyebrow="Communications"
         title="Notifications"
-        description="A cleaner operations inbox with visual types, unread state, and lightweight action handling."
+        description="Review notifications from donations, service requests, and system alerts."
         actions={
           <>
-            <Badge variant={notificationSource === "api" ? "info" : "warning"}>
-              {notificationSource === "api" ? "Live backend data" : "Mock fallback"}
-            </Badge>
-            <Badge variant={notificationsSocketStatus === "open" ? "success" : "warning"}>
-              {notificationsSocketStatus === "open" ? "Realtime connected" : "REST fallback"}
-            </Badge>
             <Button
               variant="secondary"
               size="sm"
-              onClick={handleMarkAllRead}
-              disabled={!notifications.length || unreadCount === 0}
+              onClick={() => setShowArchived((current) => !current)}
             >
-              Mark all as read
+              {showArchived ? "Back to inbox" : "View archived"}
             </Button>
+            {!showArchived ? (
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={handleMarkAllRead}
+                disabled={!visibleNotifications.length || unreadCount === 0}
+              >
+                Mark all as read
+              </Button>
+            ) : null}
           </>
         }
       />
@@ -90,25 +146,55 @@ function NotificationsPage() {
             {notifications.filter((notification) => notification.status !== "sent").length}
           </strong>
         </div>
-        <div className="mini-stat-card">
-          <span className="summary-label">Source</span>
-          <strong>{notificationSource === "api" ? "API" : "Mock"}</strong>
-        </div>
       </section>
 
       <DataTableShell
-        title="Notification inbox"
-        description="REST history stays available while realtime updates append as they arrive."
-        badge={`${notifications.length} records`}
+        title={showArchived ? "Archived notifications" : "Notification inbox"}
+        description={
+          showArchived
+            ? "Notifications you've archived out of the active inbox."
+            : "New notifications appear automatically as they are generated."
+        }
+        badge={`${visibleNotifications.length} records`}
         loading={false}
-        hasRows={notifications.length > 0}
-        emptyTitle="No notifications available"
-        emptyDescription="Notifications from donations, requests, and system events will appear here."
+        hasRows={visibleNotifications.length > 0}
+        emptyTitle={showArchived ? "No archived notifications" : "No notifications available"}
+        emptyDescription={
+          showArchived
+            ? "Notifications you archive will show up here."
+            : "Notifications from donations, requests, and system events will appear here."
+        }
+        actions={
+          <div className="toolbar-inline">
+            <Input
+              id="notification-search"
+              label=""
+              placeholder="Search notifications"
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+              className="toolbar-field"
+            />
+            <div className="filter-chips">
+              {categoryFilters.map((option) => (
+                <button
+                  key={option.value}
+                  type="button"
+                  className={cn("filter-chip", category === option.value ? "filter-chip-active" : "")}
+                  onClick={() => setCategory(option.value)}
+                >
+                  {option.value}
+                </button>
+              ))}
+            </div>
+          </div>
+        }
       >
         <NotificationList
-          notifications={notifications}
+          notifications={visibleNotifications}
           loading={loading}
-          onMarkRead={handleMarkRead}
+          onMarkRead={showArchived ? undefined : handleMarkRead}
+          onArchive={toggleArchive}
+          archiveLabel={showArchived ? "Unarchive" : "Archive"}
         />
       </DataTableShell>
     </>

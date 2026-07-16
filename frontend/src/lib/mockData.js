@@ -1,54 +1,5 @@
-export const mockServiceRequests = [
-  {
-    id: "SR-1042",
-    client_name: "Rosa Martinez",
-    service_type: "Pantry delivery",
-    priority: "High",
-    status: "Open",
-    location: "Downtown East",
-    assignee: "Unassigned",
-    created_at: "2026-05-13T10:15:00Z",
-    preferred_date: "2026-05-15",
-    notes: "Needs assistance carrying groceries upstairs."
-  },
-  {
-    id: "SR-1038",
-    client_name: "Arthur Bennett",
-    service_type: "Wellness check-in",
-    priority: "Medium",
-    status: "In progress",
-    location: "Remote",
-    assignee: "Nia Patel",
-    created_at: "2026-05-12T16:40:00Z",
-    preferred_date: "2026-05-14",
-    notes: "Prefers a late afternoon call and speaks slowly."
-  },
-  {
-    id: "SR-1031",
-    client_name: "Kim Johnson",
-    service_type: "Meal prep support",
-    priority: "High",
-    status: "Open",
-    location: "Community Kitchen",
-    assignee: "Marcus Lee",
-    created_at: "2026-05-11T09:05:00Z",
-    preferred_date: "2026-05-17",
-    notes: "Requires allergy-safe packaging and pickup coordination."
-  },
-  {
-    id: "SR-1027",
-    client_name: "Laila Hassan",
-    service_type: "Transportation",
-    priority: "Low",
-    status: "Assigned",
-    location: "Northside Clinic",
-    assignee: "Jordan Chen",
-    created_at: "2026-05-10T12:25:00Z",
-    preferred_date: "2026-05-18",
-    notes: "Medical appointment transport with wheelchair support."
-  }
-];
-
+// Fallback notifications shown only if the real /notifications endpoint is
+// unreachable (see fetchNotifications in services/operationsService.js).
 export const mockNotifications = [
   {
     id: "mock-notification-1",
@@ -84,127 +35,366 @@ export const mockNotifications = [
   }
 ];
 
-export const mockVolunteerAssignments = [
+// The Volunteers directory is presentation-layer data (there is no backend
+// "list all volunteers" endpoint -- see routers/volunteer.py, which is
+// strictly self-service). These 20 names are the same ones used as
+// `assignee_name` in backend/seed_demo_data.py's SERVICE_REQUESTS, so a
+// volunteer searched here also shows up assigned to real service requests
+// and referenced in real notifications. Sarah Johnson's "Unavailable"
+// status matches the reassignment story seeded there (her wellness-check
+// shift for Agnes Littlebear was reassigned to Grace Okafor).
+export const volunteerDirectory = [
   {
-    id: "VA-201",
-    request_id: "SR-1042",
-    client_name: "Rosa Martinez",
-    service_type: "Pantry delivery",
-    status: "Assigned",
-    action_label: "Confirm pickup",
-    scheduled_for: "2026-05-15T14:00:00Z",
-    location: "Downtown East"
+    id: "VOL-101",
+    name: "Priya Anand",
+    email: "priya.anand@example.org",
+    phone: "(250) 217-7743",
+    program: "Pantry delivery",
+    skills: ["Driving", "Heavy lifting"],
+    status: "Active",
+    last_activity: "2026-07-14T16:20:00Z",
+    upcoming_shift: "2026-07-18T09:00:00Z",
+    background_check: "Cleared",
+    onboarding: "Complete"
   },
   {
-    id: "VA-202",
-    request_id: "SR-1027",
-    client_name: "Laila Hassan",
-    service_type: "Transportation",
-    status: "In progress",
-    action_label: "View route",
-    scheduled_for: "2026-05-16T09:30:00Z",
-    location: "Northside Clinic"
+    id: "VOL-102",
+    name: "Sofia Reyes",
+    email: "sofia.reyes@example.org",
+    phone: "(250) 552-3310",
+    program: "Pantry delivery",
+    skills: ["Driving", "Inventory management"],
+    status: "Active",
+    last_activity: "2026-06-13T15:00:00Z",
+    upcoming_shift: "2026-07-20T10:00:00Z",
+    background_check: "Cleared",
+    onboarding: "Complete"
   },
   {
-    id: "VA-203",
-    request_id: "SR-1019",
-    client_name: "David Cho",
-    service_type: "Meal delivery",
-    status: "Pending confirmation",
-    action_label: "Accept task",
-    scheduled_for: "2026-05-17T12:15:00Z",
-    location: "Harbor District"
+    id: "VOL-103",
+    name: "Natasha Petrov",
+    email: "natasha.petrov@example.org",
+    phone: "(250) 664-9021",
+    program: "Pantry delivery",
+    skills: ["Driving", "Route planning"],
+    status: "Active",
+    last_activity: "2026-06-27T13:40:00Z",
+    upcoming_shift: "2026-07-17T11:00:00Z",
+    background_check: "Cleared",
+    onboarding: "Complete"
+  },
+  {
+    id: "VOL-104",
+    name: "Emily Tran",
+    email: "emily.tran@example.org",
+    phone: "(250) 381-2207",
+    program: "Pantry delivery",
+    skills: ["Driving"],
+    status: "Active",
+    last_activity: "2026-07-10T10:00:00Z",
+    upcoming_shift: "2026-07-19T09:30:00Z",
+    background_check: "Cleared",
+    onboarding: "Complete"
+  },
+  {
+    id: "VOL-105",
+    name: "Jordan Chen",
+    email: "jordan.chen@example.org",
+    phone: "(250) 442-9981",
+    program: "Transportation",
+    skills: ["Driving", "Wheelchair-accessible transport"],
+    status: "Active",
+    last_activity: "2026-05-27T09:15:00Z",
+    upcoming_shift: null,
+    background_check: "Cleared",
+    onboarding: "Complete"
+  },
+  {
+    id: "VOL-106",
+    name: "Connor Campbell",
+    email: "connor.campbell@example.org",
+    phone: "(250) 598-4471",
+    program: "Transportation",
+    skills: ["Driving", "Wheelchair-accessible transport"],
+    status: "Active",
+    last_activity: "2026-06-09T12:00:00Z",
+    upcoming_shift: null,
+    background_check: "Cleared",
+    onboarding: "Complete"
+  },
+  {
+    id: "VOL-107",
+    name: "Liam Fischer",
+    email: "liam.fischer@example.org",
+    phone: "(250) 226-8804",
+    program: "Transportation",
+    skills: ["Driving"],
+    status: "Active",
+    last_activity: "2026-06-22T09:00:00Z",
+    upcoming_shift: "2026-07-22T13:00:00Z",
+    background_check: "Cleared",
+    onboarding: "Complete"
+  },
+  {
+    id: "VOL-108",
+    name: "Jasdeep Sidhu",
+    email: "jasdeep.sidhu@example.org",
+    phone: "(250) 774-6630",
+    program: "Transportation",
+    skills: ["Driving", "Route planning"],
+    status: "Active",
+    last_activity: "2026-07-09T08:45:00Z",
+    upcoming_shift: "2026-07-17T14:00:00Z",
+    background_check: "Cleared",
+    onboarding: "Complete"
+  },
+  {
+    id: "VOL-109",
+    name: "Nia Patel",
+    email: "nia.patel@example.org",
+    phone: "(250) 330-5521",
+    program: "Wellness check-in",
+    skills: ["Bilingual (Spanish)", "First aid"],
+    status: "Active",
+    last_activity: "2026-05-25T10:40:00Z",
+    upcoming_shift: null,
+    background_check: "Cleared",
+    onboarding: "Complete"
+  },
+  {
+    id: "VOL-110",
+    name: "Grace Okafor",
+    email: "grace.okafor@example.org",
+    phone: "(250) 990-6647",
+    program: "Wellness check-in",
+    skills: ["Bilingual (French)", "First aid"],
+    status: "Active",
+    last_activity: "2026-07-10T11:10:00Z",
+    upcoming_shift: "2026-07-22T13:00:00Z",
+    background_check: "Cleared",
+    onboarding: "Complete"
+  },
+  {
+    id: "VOL-111",
+    name: "Fatima Al-Rashid",
+    email: "fatima.alrashid@example.org",
+    phone: "(250) 415-2298",
+    program: "Wellness check-in",
+    skills: ["Bilingual (Arabic)", "First aid"],
+    status: "Active",
+    last_activity: "2026-06-18T09:30:00Z",
+    upcoming_shift: null,
+    background_check: "Cleared",
+    onboarding: "Complete"
+  },
+  {
+    id: "VOL-112",
+    name: "Sarah Johnson",
+    email: "sarah.johnson@example.org",
+    phone: "(250) 812-3345",
+    program: "Wellness check-in",
+    skills: ["First aid", "Counseling background"],
+    status: "Unavailable",
+    last_activity: "2026-07-10T08:45:00Z",
+    upcoming_shift: null,
+    background_check: "Cleared",
+    onboarding: "Complete"
+  },
+  {
+    id: "VOL-113",
+    name: "Marcus Lee",
+    email: "marcus.lee@example.org",
+    phone: "(250) 118-2290",
+    program: "Meal prep support",
+    skills: ["Food handling", "Team lead"],
+    status: "Active",
+    last_activity: "2026-06-05T13:05:00Z",
+    upcoming_shift: null,
+    background_check: "Cleared",
+    onboarding: "Complete"
+  },
+  {
+    id: "VOL-114",
+    name: "David Cho",
+    email: "david.cho@example.org",
+    phone: "(250) 883-1120",
+    program: "Meal prep support",
+    skills: ["Food handling"],
+    status: "Active",
+    last_activity: "2026-07-07T17:30:00Z",
+    upcoming_shift: "2026-07-18T11:00:00Z",
+    background_check: "Cleared",
+    onboarding: "Complete"
+  },
+  {
+    id: "VOL-115",
+    name: "Elena Volkov",
+    email: "elena.volkov@example.org",
+    phone: "(250) 771-4432",
+    program: "Admin support",
+    skills: ["Data entry", "Scheduling"],
+    status: "Active",
+    last_activity: "2026-07-15T08:50:00Z",
+    upcoming_shift: "2026-07-16T09:00:00Z",
+    background_check: "Cleared",
+    onboarding: "Complete"
+  },
+  {
+    id: "VOL-116",
+    name: "Hannah Wright",
+    email: "hannah.wright@example.org",
+    phone: "(250) 264-7789",
+    program: "Admin support",
+    skills: ["Data entry", "Grant writing"],
+    status: "Active",
+    last_activity: "2026-06-16T14:00:00Z",
+    upcoming_shift: null,
+    background_check: "Cleared",
+    onboarding: "Complete"
+  },
+  {
+    id: "VOL-117",
+    name: "Aisha Khan",
+    email: "aisha.khan@example.org",
+    phone: "(250) 355-9012",
+    program: "Admin support",
+    skills: ["Data entry"],
+    status: "Onboarding",
+    last_activity: "2026-07-12T10:00:00Z",
+    upcoming_shift: null,
+    background_check: "Pending",
+    onboarding: "In progress"
+  },
+  {
+    id: "VOL-118",
+    name: "Owen Brooks",
+    email: "owen.brooks@example.org",
+    phone: "(250) 674-2205",
+    program: "Event support",
+    skills: ["Event coordination"],
+    status: "Active",
+    last_activity: "2026-06-28T12:00:00Z",
+    upcoming_shift: null,
+    background_check: "Cleared",
+    onboarding: "Complete"
+  },
+  {
+    id: "VOL-119",
+    name: "Ryan MacDonald",
+    email: "ryan.macdonald@example.org",
+    phone: "(250) 903-5541",
+    program: "Event support",
+    skills: ["Event coordination", "Team lead"],
+    status: "Inactive",
+    last_activity: "2026-05-02T09:00:00Z",
+    upcoming_shift: null,
+    background_check: "Expired",
+    onboarding: "Complete"
+  },
+  {
+    id: "VOL-120",
+    name: "Carlos Mendoza",
+    email: "carlos.mendoza@example.org",
+    phone: "(250) 447-6689",
+    program: "Event support",
+    skills: ["Event coordination"],
+    status: "Active",
+    last_activity: "2026-07-05T15:20:00Z",
+    upcoming_shift: null,
+    background_check: "Cleared",
+    onboarding: "Complete"
   }
 ];
 
-export const mockVolunteerTasks = [
+// Users admin page -- also presentation-layer only (no backend user-
+// management API; see the Task 2 volunteer-permissions writeup). A few
+// entries intentionally reuse volunteerDirectory names so the same person
+// is recognizable across Volunteers and Users.
+export const userAccounts = [
   {
-    id: "TASK-11",
-    title: "Confirm pantry route supplies",
-    due_at: "2026-05-15T10:00:00Z",
-    status: "Due soon"
+    id: "USR-01",
+    name: "Alex Rivera",
+    email: "alex.rivera@obvs.org",
+    role: "Admin",
+    status: "Active",
+    last_login: "2026-07-15T18:22:00Z",
+    permissions: "Full workspace access"
   },
   {
-    id: "TASK-12",
-    title: "Call assigned client before pickup",
-    due_at: "2026-05-15T12:00:00Z",
-    status: "Upcoming"
+    id: "USR-02",
+    name: "Morgan Blake",
+    email: "morgan.blake@obvs.org",
+    role: "Coordinator",
+    status: "Active",
+    last_login: "2026-07-15T14:05:00Z",
+    permissions: "Manage requests, volunteers, donations"
   },
   {
-    id: "TASK-13",
-    title: "Submit service notes for SR-1027",
-    due_at: "2026-05-16T17:00:00Z",
-    status: "Open"
+    id: "USR-03",
+    name: "Sam Okoye",
+    email: "sam.okoye@obvs.org",
+    role: "Coordinator",
+    status: "Active",
+    last_login: "2026-07-14T09:40:00Z",
+    permissions: "Manage requests, volunteers, donations"
+  },
+  {
+    id: "USR-04",
+    name: "Priya Anand",
+    email: "priya.anand@example.org",
+    role: "Volunteer",
+    status: "Active",
+    last_login: "2026-07-14T16:20:00Z",
+    permissions: "View assignments, edit own profile"
+  },
+  {
+    id: "USR-05",
+    name: "Grace Okafor",
+    email: "grace.okafor@example.org",
+    role: "Volunteer",
+    status: "Active",
+    last_login: "2026-07-10T11:10:00Z",
+    permissions: "View assignments, edit own profile"
+  },
+  {
+    id: "USR-06",
+    name: "Taylor Whitfield",
+    email: "taylor.whitfield@obvs.org",
+    role: "Coordinator",
+    status: "Disabled",
+    last_login: "2026-06-02T10:00:00Z",
+    permissions: "Manage requests, volunteers, donations"
+  },
+  {
+    id: "USR-07",
+    name: "Aisha Khan",
+    email: "aisha.khan@example.org",
+    role: "Volunteer",
+    status: "Pending",
+    last_login: null,
+    permissions: "View assignments, edit own profile"
+  },
+  {
+    id: "USR-08",
+    name: "Jamie Sutton",
+    email: "jamie.sutton@obvs.org",
+    role: "Admin",
+    status: "Active",
+    last_login: "2026-07-13T11:15:00Z",
+    permissions: "Full workspace access"
   }
 ];
 
-export const mockVolunteerAvailability = [
-  { day: "Monday", morning: true, afternoon: false, evening: false },
-  { day: "Tuesday", morning: false, afternoon: true, evening: true },
-  { day: "Wednesday", morning: true, afternoon: true, evening: false },
-  { day: "Thursday", morning: false, afternoon: false, evening: true },
-  { day: "Friday", morning: true, afternoon: true, evening: true },
-  { day: "Saturday", morning: false, afternoon: true, evening: false },
-  { day: "Sunday", morning: false, afternoon: false, evening: false }
+// Reports page fallback chart -- there is no backend "volunteer hours"
+// tracking table yet, so this stays a standalone illustrative series
+// (see ReportsPage.jsx). Kept trending upward into the current week.
+export const volunteerHoursByWeek = [
+  { week: "May 25", hours: 192 },
+  { week: "Jun 1", hours: 178 },
+  { week: "Jun 8", hours: 221 },
+  { week: "Jun 15", hours: 235 },
+  { week: "Jun 22", hours: 208 },
+  { week: "Jun 29", hours: 226 },
+  { week: "Jul 6", hours: 244 },
+  { week: "Jul 13", hours: 251 }
 ];
-
-export const mockVolunteerServices = [
-  { id: "svc-1", label: "Pantry delivery", selected: true },
-  { id: "svc-2", label: "Transportation", selected: true },
-  { id: "svc-3", label: "Meal prep support", selected: false },
-  { id: "svc-4", label: "Wellness check-ins", selected: true },
-  { id: "svc-5", label: "Admin support", selected: false },
-  { id: "svc-6", label: "Event setup", selected: false }
-];
-
-export const mockVolunteerProfile = {
-  full_name: "Taylor Morgan",
-  email: "taylor.morgan@example.org",
-  phone: "(555) 014-2288",
-  location: "Southwest District",
-  emergency_contact: "Jordan Morgan",
-  notification_preferences: {
-    email: true,
-    sms: false,
-    push: true,
-    urgent_only: false
-  },
-  availability_status: "Available this week"
-};
-
-export const mockVolunteerStats = [
-  { label: "Active volunteers", value: 48, detail: "+6 this month" },
-  { label: "Available shifts", value: 19, detail: "Across 5 programs" },
-  { label: "Pending approvals", value: 7, detail: "Needs coordinator review" }
-];
-
-export const mockPageSummaries = {
-  Volunteers: {
-    description: "Track recruitment, onboarding, and daily staffing coverage.",
-    highlights: ["48 active volunteers", "7 pending approvals", "92% shift coverage"]
-  },
-  "Service Requests": {
-    description: "Coordinate field requests and route urgent work to the right team.",
-    highlights: ["12 open requests", "3 urgent", "Average response 34 min"]
-  },
-  Reports: {
-    description: "Review donation trends, staffing health, and fulfillment performance.",
-    highlights: ["Weekly impact report", "Monthly fundraising summary", "Quarterly board pack"]
-  },
-  Users: {
-    description: "Manage internal access, permissions, and account lifecycle.",
-    highlights: ["14 active users", "2 pending invites", "Role audit ready"]
-  },
-  Settings: {
-    description: "Configure platform defaults, communication preferences, and workspace details.",
-    highlights: ["Brand settings", "Notification defaults", "Regional preferences"]
-  },
-  Availability: {
-    description: "Visualize volunteer coverage, upcoming shifts, and schedule gaps.",
-    highlights: ["19 open shifts", "Weekend coverage at risk", "5 coordinators online"]
-  },
-  Profile: {
-    description: "View personal account details, role scope, and recent activity.",
-    highlights: ["JWT session active", "Role-aware navigation", "Personal preferences placeholder"]
-  }
-};

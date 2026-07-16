@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 from db import get_db
 from routers.auth import get_current_user, require_role
 from services.auth_service import get_user_from_token
-from schemas import CurrentUser, NotificationMarkReadResponse, NotificationRead
+from schemas import CurrentUser, NotificationRead
 from services.notification_service import (
     dispatch_notification,
     list_notifications,
@@ -19,7 +19,7 @@ from services.realtime_notification_service import stream_notification_events
 router = APIRouter()
 
 
-@router.get('/notifications', response_model=list[NotificationRead])
+@router.get('/notifications', response_model=list[NotificationRead], response_model_by_alias=False)
 def notifications(
     db: Session = Depends(get_db),
     user: CurrentUser = Depends(get_current_user),
@@ -52,7 +52,7 @@ async def notifications_websocket(websocket: WebSocket):
         return
 
 
-@router.post('/notifications/{id}/dispatch', response_model=NotificationRead)
+@router.post('/notifications/{id}/dispatch', response_model=NotificationRead, response_model_by_alias=False)
 def dispatch_notification_endpoint(
     id: int = Path(..., ge=1),
     db: Session = Depends(get_db),
@@ -61,7 +61,7 @@ def dispatch_notification_endpoint(
     return dispatch_notification(db, id)
 
 
-@router.post('/notifications/{id}/read', response_model=NotificationRead)
+@router.post('/notifications/{id}/read', response_model=NotificationRead, response_model_by_alias=False)
 def mark_notification_read_endpoint(
     id: int = Path(..., ge=1),
     db: Session = Depends(get_db),

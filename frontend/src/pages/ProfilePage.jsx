@@ -69,7 +69,7 @@ function ProfilePage() {
         <div className="content-span-2">
           <DataTableShell
             title="Contact information"
-            description="Profile editing now persists through the volunteer profile backend endpoints."
+            description="Update your contact details and how coordinators can reach you."
             loading={loading}
             hasRows
             actions={
@@ -117,7 +117,7 @@ function ProfilePage() {
 
         <DataTableShell
           title="Notification preferences"
-          description="Preview and adjust the ways you receive updates."
+          description="Choose how you'd like to receive updates."
           loading={false}
           hasRows
         >

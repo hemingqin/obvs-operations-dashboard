@@ -7,13 +7,16 @@ import DashboardPage from "./pages/DashboardPage.jsx";
 import DonationsPage from "./pages/DonationsPage.jsx";
 import LoginPage from "./pages/LoginPage.jsx";
 import NotificationsPage from "./pages/NotificationsPage.jsx";
-import PlaceholderPage from "./pages/PlaceholderPage.jsx";
 import ProfilePage from "./pages/ProfilePage.jsx";
+import ReportsPage from "./pages/ReportsPage.jsx";
 import ServiceRequestsPage from "./pages/ServiceRequestsPage.jsx";
+import SettingsPage from "./pages/SettingsPage.jsx";
 import UnauthorizedPage from "./pages/UnauthorizedPage.jsx";
+import UsersPage from "./pages/UsersPage.jsx";
 import VolunteerAvailabilityPage from "./pages/VolunteerAvailabilityPage.jsx";
 import VolunteerMyRequestsPage from "./pages/VolunteerMyRequestsPage.jsx";
 import VolunteerMyServicesPage from "./pages/VolunteerMyServicesPage.jsx";
+import VolunteersPage from "./pages/VolunteersPage.jsx";
 
 function ProtectedRoute({ children }) {
   if (!getToken()) {
@@ -61,7 +64,7 @@ function App() {
           path="/volunteers"
           element={
             <RoleRoute allowedRoles={["coordinator", "admin"]}>
-              <PlaceholderPage section="Volunteers" />
+              <VolunteersPage />
             </RoleRoute>
           }
         />
@@ -86,7 +89,7 @@ function App() {
           path="/reports"
           element={
             <RoleRoute allowedRoles={["coordinator", "admin"]}>
-              <PlaceholderPage section="Reports" />
+              <ReportsPage />
             </RoleRoute>
           }
         />
@@ -94,7 +97,7 @@ function App() {
           path="/users"
           element={
             <RoleRoute allowedRoles={["admin"]}>
-              <PlaceholderPage section="Users" />
+              <UsersPage />
             </RoleRoute>
           }
         />
@@ -102,7 +105,7 @@ function App() {
           path="/settings"
           element={
             <RoleRoute allowedRoles={["admin"]}>
-              <PlaceholderPage section="Settings" />
+              <SettingsPage />
             </RoleRoute>
           }
         />

@@ -78,7 +78,6 @@ function AppShellLayout() {
       onLogout={handleLogout}
       profile={profile}
       unreadNotifications={notifications?.unreadCount || 0}
-      notificationsSocketStatus={notifications?.socketStatus || "fallback"}
     >
       <Outlet />
     </DashboardShell>

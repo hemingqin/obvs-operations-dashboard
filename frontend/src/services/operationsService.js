@@ -16,6 +16,10 @@ function inferNotificationType(message = "") {
     return "warning";
   }
 
+  if (normalized.includes("volunteer")) {
+    return "volunteer";
+  }
+
   if (normalized.includes("request")) {
     return "request";
   }
@@ -29,15 +33,11 @@ function inferNotificationType(message = "") {
 
 export function normalizeNotification(notification) {
   const type = notification.type || inferNotificationType(notification.message);
-  const read =
-    typeof notification.read === "boolean"
-      ? notification.read
-      : notification.status === "sent" && type === "system";
 
   return {
     ...notification,
     type,
-    read
+    read: Boolean(notification.read)
   };
 }
 

@@ -2,7 +2,7 @@ import { NavLink } from "react-router-dom";
 import Badge from "../ui/Badge.jsx";
 import { cn } from "../../lib/utils.js";
 
-function Sidebar({ items, role, open, onClose }) {
+function Sidebar({ items, open, onClose }) {
   return (
     <>
       <div className={cn("sidebar-overlay", open ? "is-open" : "")} onClick={onClose} />
@@ -31,10 +31,7 @@ function Sidebar({ items, role, open, onClose }) {
         </nav>
 
         <div className="sidebar-footer">
-          <Badge variant="success">{role ? `${role} access` : "session active"}</Badge>
-          {/* <p className="sidebar-help">
-            Role-aware navigation is ready for Volunteer, Coordinator, and Admin workspaces.
-          </p> */}
+          <p className="sidebar-org">Oak Bay Volunteer Services</p>
         </div>
       </aside>
     </>

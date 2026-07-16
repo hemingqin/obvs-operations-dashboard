@@ -89,7 +89,7 @@ function VolunteerDashboard({ notifications, volunteerAssignments, volunteerTask
 
         <DataTableShell
           title="Availability status"
-          description="A quick preview of what coordinators currently see."
+          description="What coordinators currently see for your schedule."
           loading={false}
           hasRows
         >
@@ -139,7 +139,7 @@ function VolunteerDashboard({ notifications, volunteerAssignments, volunteerTask
 
         <DataTableShell
           title="Notification preferences"
-          description="Preview of the current contact methods set in your profile."
+          description="The contact methods currently set in your profile."
           loading={false}
           hasRows
         >
@@ -169,7 +169,7 @@ function OperationsDashboard({ notifications, loading, error, metrics, recentAct
       <PageHeader
         eyebrow="Nonprofit operations"
         title="Mission control"
-        description="A believable internal operations home for fundraising, staffing, requests, and communications."
+        description="Monitor organizational activity, volunteer operations, donations, and service requests from a unified workspace."
         actions={
           <>
             <Badge variant="success">{loading ? "Refreshing" : "Today active"}</Badge>
@@ -184,8 +184,7 @@ function OperationsDashboard({ notifications, loading, error, metrics, recentAct
         <StatCard
           label="Donation volume"
           value={metrics.totalDonations}
-          detail="Records currently available from the live donations endpoint."
-          badge="Live"
+          detail="Total donation records on file."
         />
         <StatCard
           label="Funds raised"
@@ -195,13 +194,12 @@ function OperationsDashboard({ notifications, loading, error, metrics, recentAct
         <StatCard
           label="Open service requests"
           value={metrics.openServiceRequests}
-          detail="Persisted service request records from the FastAPI backend."
-          badge="Live"
+          detail="Requests awaiting assignment or in progress."
         />
         <StatCard
           label="Notifications sent"
           value={metrics.sentNotifications}
-          detail={`${profile.role || "user"} workspace with role-aware navigation.`}
+          detail={`Signed in as ${profile.role || "team member"}.`}
         />
       </section>
 
@@ -209,12 +207,12 @@ function OperationsDashboard({ notifications, loading, error, metrics, recentAct
         <div className="content-span-2">
           <DataTableShell
             title="Open service requests"
-            description="A preview of inbound support work the team is managing right now."
+            description="Inbound support work the team is managing right now."
             badge={`${serviceRequests.length} active`}
             loading={loading}
             hasRows={serviceRequests.length > 0}
             emptyTitle="No service requests"
-            emptyDescription="Open service requests will appear here once that module is wired."
+            emptyDescription="Open service requests will appear here as they come in."
           >
             <Table>
               <TableHeader>

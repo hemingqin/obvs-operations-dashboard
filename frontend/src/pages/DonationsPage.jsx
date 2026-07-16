@@ -11,7 +11,13 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from ".
 import { formatCurrency, formatDate, useOperationsData } from "../hooks/useOperationsData.js";
 import { readApiError } from "../lib/api.js";
 import { clearToken, getToken } from "../lib/auth.js";
+import { downloadCsv } from "../lib/csv.js";
 import { createDonation } from "../services/operationsService.js";
+
+const sortableColumns = {
+  amount: (donation) => Number(donation.amount || 0),
+  created_at: (donation) => new Date(donation.created_at).getTime()
+};
 
 function DonationsPage() {
   const navigate = useNavigate();
@@ -22,6 +28,7 @@ function DonationsPage() {
   const [search, setSearch] = useState("");
   const [formError, setFormError] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [sort, setSort] = useState({ key: "created_at", dir: "desc" });
 
   const filteredDonations = useMemo(() => {
     const query = search.trim().toLowerCase();
@@ -34,6 +41,41 @@ function DonationsPage() {
       donation.donor_name.toLowerCase().includes(query)
     );
   }, [donations, search]);
+
+  const sortedDonations = useMemo(() => {
+    const getValue = sortableColumns[sort.key];
+    return [...filteredDonations].sort((left, right) =>
+      sort.dir === "asc" ? getValue(left) - getValue(right) : getValue(right) - getValue(left)
+    );
+  }, [filteredDonations, sort]);
+
+  function toggleSort(key) {
+    setSort((current) => ({
+      key,
+      dir: current.key === key && current.dir === "desc" ? "asc" : "desc"
+    }));
+  }
+
+  function sortIndicator(key) {
+    if (sort.key !== key) {
+      return "";
+    }
+    return sort.dir === "asc" ? " ▲" : " ▼";
+  }
+
+  function handleExportCsv() {
+    const rows = [
+      ["ID", "Donor", "Amount", "Created"],
+      ...filteredDonations.map((donation) => [
+        donation.id,
+        donation.donor_name,
+        Number(donation.amount || 0).toFixed(2),
+        donation.created_at
+      ])
+    ];
+
+    downloadCsv(`donations-${new Date().toISOString().slice(0, 10)}.csv`, rows);
+  }
 
   const filteredTotal = useMemo(
     () =>
@@ -109,7 +151,10 @@ function DonationsPage() {
         description="Search the donation stream, review key fundraising signals, and add new records without leaving the dashboard."
         actions={
           <>
-            <Badge variant="success">{loading ? "Syncing" : "API connected"}</Badge>
+            {loading ? <Badge variant="warning">Syncing</Badge> : null}
+            <Button variant="secondary" onClick={handleExportCsv} disabled={!filteredDonations.length}>
+              Export CSV
+            </Button>
             <Button onClick={() => setDialogOpen(true)}>Add donation</Button>
           </>
         }
@@ -142,7 +187,7 @@ function DonationsPage() {
 
       <DataTableShell
         title="All donations"
-        description="The table uses the current donations API and keeps room for future editing workflows."
+        description="All recorded donations, sorted by most recent."
         badge={`${filteredDonations.length} rows`}
         loading={loading}
         hasRows={filteredDonations.length > 0}
@@ -185,13 +230,21 @@ function DonationsPage() {
               <TableRow>
                 <TableHead>ID</TableHead>
                 <TableHead>Donor</TableHead>
-                <TableHead>Amount</TableHead>
-                <TableHead>Created</TableHead>
+                <TableHead>
+                  <button type="button" className="table-sort-button" onClick={() => toggleSort("amount")}>
+                    Amount{sortIndicator("amount")}
+                  </button>
+                </TableHead>
+                <TableHead>
+                  <button type="button" className="table-sort-button" onClick={() => toggleSort("created_at")}>
+                    Created{sortIndicator("created_at")}
+                  </button>
+                </TableHead>
                 <TableHead>Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredDonations.map((donation) => (
+              {sortedDonations.map((donation) => (
                 <TableRow key={donation.id}>
                   <TableCell>#{donation.id}</TableCell>
                   <TableCell>{donation.donor_name}</TableCell>
@@ -217,7 +270,7 @@ function DonationsPage() {
       <Dialog
         open={dialogOpen}
         title="Add donation"
-        description="This dialog uses the current create donation API and respects the existing token-based access rules."
+        description="Record a new donation to the fundraising ledger."
         onClose={() => {
           if (!submitting) {
             setDialogOpen(false);

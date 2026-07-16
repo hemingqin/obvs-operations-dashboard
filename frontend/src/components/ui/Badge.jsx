@@ -4,7 +4,8 @@ const variantClassNames = {
   default: "badge-default",
   success: "badge-success",
   warning: "badge-warning",
-  info: "badge-info"
+  info: "badge-info",
+  danger: "badge-danger"
 };
 
 function Badge({ variant = "default", className = "", children }) {

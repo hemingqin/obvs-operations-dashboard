@@ -1,24 +1,14 @@
 import { Link } from "react-router-dom";
 import Button from "../ui/Button.jsx";
-import Badge from "../ui/Badge.jsx";
 
 function Navbar({
   title,
   subtitle,
-  role,
   profile,
   unreadNotifications = 0,
-  notificationsSocketStatus = "fallback",
   onMenuToggle,
   onLogout
 }) {
-  const realtimeLabel =
-    notificationsSocketStatus === "open"
-      ? "Realtime"
-      : notificationsSocketStatus === "reconnecting"
-        ? "Reconnecting"
-        : "REST fallback";
-
   return (
     <header className="navbar">
       <div className="navbar-main">
@@ -32,20 +22,32 @@ function Navbar({
       </div>
 
       <div className="navbar-actions">
-        <Badge variant={notificationsSocketStatus === "open" ? "success" : "warning"}>
-          {realtimeLabel}
-        </Badge>
         <Link
           to="/notifications"
           className="notification-bell"
-          aria-label={`${unreadNotifications} unread notifications`}
+          aria-label={unreadNotifications ? `${unreadNotifications} unread notifications` : "Notifications"}
         >
-          {unreadNotifications} unread
+          <svg
+            width="18"
+            height="18"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden="true"
+          >
+            <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" />
+            <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" />
+          </svg>
+          {unreadNotifications > 0 ? (
+            <span className="notification-dot">{unreadNotifications > 9 ? "9+" : unreadNotifications}</span>
+          ) : null}
         </Link>
-        <Badge variant="info">{role ? `${role} role` : "authenticated"}</Badge>
         <div className="navbar-profile">
           <span className="navbar-profile-name">{profile?.displayName || "Team member"}</span>
-          <span className="navbar-profile-meta">Internal operations</span>
+          <span className="navbar-profile-meta">Oak Bay Volunteer Services</span>
         </div>
         <Button variant="secondary" size="sm" onClick={onLogout}>
           Logout

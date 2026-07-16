@@ -55,7 +55,7 @@ function VolunteerMyServicesPage() {
 
       <DataTableShell
         title="Service categories"
-        description="Selections now persist through the volunteer services backend endpoints."
+        description="Coordinators use these selections to match you with the right requests."
         loading={loading}
         hasRows
         actions={

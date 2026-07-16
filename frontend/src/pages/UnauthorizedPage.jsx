@@ -14,7 +14,7 @@ function UnauthorizedPage() {
       <PageHeader
         eyebrow="Access control"
         title="Unauthorized"
-        description="This route is outside your current role scope."
+        description="You don't have permission to view this page."
         actions={
           <Button
             onClick={() => navigate(getDefaultRouteForRole(getSessionRole()), { replace: true })}
@@ -24,7 +24,7 @@ function UnauthorizedPage() {
         }
       />
 
-      <DataTableShell title="Access denied" description="Role-based routing is active." loading={false} hasRows>
+      <DataTableShell title="Access denied" description="Contact your coordinator if you believe this is a mistake." loading={false} hasRows>
         <EmptyState
           title="You do not have access to this page"
           description="Use the sidebar to navigate to modules that are available for your current role."

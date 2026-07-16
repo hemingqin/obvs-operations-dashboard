@@ -18,7 +18,7 @@ function VolunteerMyRequestsPage() {
 
       <DataTableShell
         title="Assigned service requests"
-        description="Action buttons are UI-only for now and ready for future workflow APIs."
+        description="Confirm assignments or review details for each request."
         badge={`${volunteerAssignments.length} requests`}
         loading={loading}
         hasRows={volunteerAssignments.length > 0}
