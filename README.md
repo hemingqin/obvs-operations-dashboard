@@ -94,9 +94,19 @@ The deployment script:
 2. Validates `docker-compose.prod.yml`.
 3. Pulls available runtime images.
 4. Rebuilds frontend and backend images.
-5. Recreates services with `docker compose up -d --remove-orphans`.
-6. Removes dangling images.
-7. Prints service status and checks `http://127.0.0.1/health`.
+5. Brings up `postgres`/`redis` (without recreating them if already running)
+   and waits for both to report healthy.
+6. Runs a database credential preflight (`backend/db_preflight.py`) as a
+   one-off container using the new images. If PostgreSQL rejects the
+   configured credentials, **the deploy stops here** and the currently
+   running backend is left untouched. See
+   [docs/deployment-database-credentials.md](./docs/deployment-database-credentials.md)
+   for why this can happen even without anyone changing a password, and how
+   to fix it safely.
+7. Only if the preflight passes: recreates services with
+   `docker compose up -d --remove-orphans`.
+8. Removes dangling images.
+9. Prints service status and checks `http://127.0.0.1/health`.
 
 ## CI/CD Flow
 
@@ -117,6 +127,71 @@ push to main
 Before enabling the workflow for a real server, add the GitHub secrets and set
 the optional repository variable `EC2_APP_DIR` if the checkout path is not
 `~/obvs`.
+
+## Troubleshooting: PostgreSQL password authentication failures
+
+**Symptom:** the backend container restart-loops, and `docker compose logs
+backend` shows:
+
+```
+sqlalchemy.exc.OperationalError: (psycopg2.OperationalError) FATAL: password authentication failed for user "postgres"
+```
+
+...while `postgres`, `redis`, and `frontend` all report healthy.
+
+**Why this happens:** the official PostgreSQL image only applies
+`POSTGRES_USER`/`POSTGRES_PASSWORD`/`POSTGRES_DB` the very first time it
+initializes a brand-new, empty `postgres_data` volume. Every later container
+start against that same (already-initialized) volume skips this step
+entirely — Postgres logs `database directory appears to contain a database;
+skipping initialization` and keeps whatever role password was set the day
+the volume was first created. If `.env.production`'s `POSTGRES_PASSWORD` (or
+`DATABASE_URL`) is ever changed or regenerated after that day, the backend
+starts sending a password Postgres no longer recognizes — even though
+`.env.production`, the backend container, and the postgres container's own
+environment can all agree with each other perfectly. This can happen without
+anyone deliberately rotating a password, e.g. if `.env.production` was ever
+recreated from a different template or a secret was regenerated without
+also updating the running database.
+
+**How to detect it:**
+- `scripts/deploy.sh` now catches this automatically — it runs
+  `backend/db_preflight.py` before recreating the backend, and refuses to
+  deploy if authentication fails, printing exactly this explanation.
+- To check manually at any time:
+  ```bash
+  cd /home/ubuntu/obvs-operations-dashboard   # or your EC2_APP_DIR
+  set -a; . ./.env.production; set +a
+  docker compose -f docker-compose.prod.yml --env-file .env.production \
+    run --rm --no-deps -e POSTGRES_USER -e POSTGRES_DB -e POSTGRES_PASSWORD \
+    backend python db_preflight.py
+  ```
+- Postgres' own log confirms the volume already existed:
+  `docker compose logs postgres | grep -i "skipping initialization"`
+
+**Recovery procedure (does not touch data):**
+
+```bash
+# Connect using the container's local trust auth (bypasses the password
+# you don't have) rather than trying to log in over the network:
+docker compose -f docker-compose.prod.yml exec postgres psql -U postgres -c \
+  "ALTER ROLE postgres WITH PASSWORD '<the value currently in .env.production>';"
+```
+
+`\password postgres` inside an interactive `psql` session works the same
+way. After this, re-run the preflight (above) or just redeploy — the
+database's stored password and `.env.production` will agree again.
+
+**Why deleting the `postgres_data` volume is *not* the fix:** it works, but
+only by destroying every donation, service request, notification, and user
+record the application has ever stored, in order to let Postgres
+re-initialize from scratch with the current `POSTGRES_PASSWORD`. That is a
+last resort for a disposable/dev environment, never for production data.
+`ALTER ROLE` fixes the actual problem (a password mismatch) without any
+data loss.
+
+See also: [docs/deployment-database-credentials.md](./docs/deployment-database-credentials.md)
+for the same explanation with more detail on the preflight implementation.
 
 ## Nginx Reverse Proxy
 

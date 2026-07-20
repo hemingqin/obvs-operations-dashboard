@@ -1,9 +1,15 @@
+import logging
 from pathlib import Path
 
 from sqlalchemy import create_engine, inspect
+from sqlalchemy.engine import make_url
+from sqlalchemy.exc import OperationalError
 from sqlalchemy.orm import Session, sessionmaker
 
 from config import settings
+from logging_utils import log_event
+
+logger = logging.getLogger("app.db")
 
 engine_kwargs = {"pool_pre_ping": True}
 
@@ -72,23 +78,61 @@ def _add_missing_columns(connection) -> None:
         )
 
 
+def _classify_connection_failure(exc: OperationalError) -> str:
+    reason = str(getattr(exc, "orig", None) or exc).lower()
+
+    if "password authentication failed" in reason:
+        return (
+            "authentication failed - the database role's stored password does not "
+            "match POSTGRES_PASSWORD/DATABASE_URL. This is expected if the volume "
+            "predates the current secret; see docs/deployment-database-credentials.md."
+        )
+    if "could not translate host name" in reason or "could not connect to server" in reason:
+        return "could not reach the database host (network or DNS issue)"
+    if "does not exist" in reason:
+        return "the target database or role does not exist"
+    return "connection failed for an unrecognized reason"
+
+
+def _log_database_connection_failure(exc: OperationalError) -> None:
+    try:
+        url = make_url(settings.database_url)
+        host, port, database, username = url.host, url.port, url.database, url.username
+    except Exception:
+        host = port = database = username = "unparsable-DATABASE_URL"
+
+    log_event(
+        logger,
+        "database_startup_failure",
+        host=host,
+        port=port,
+        database=database,
+        user=username,
+        reason=_classify_connection_failure(exc),
+    )
+
+
 def init_db() -> None:
     from models import Base
     from repository.user_repository import seed_default_users
 
-    if settings.database_url.startswith("postgresql"):
-        with engine.begin() as connection:
-            connection.exec_driver_sql("SELECT pg_advisory_lock(424242)")
-            try:
-                _cleanup_orphan_postgres_sequences(connection)
+    try:
+        if settings.database_url.startswith("postgresql"):
+            with engine.begin() as connection:
+                connection.exec_driver_sql("SELECT pg_advisory_lock(424242)")
+                try:
+                    _cleanup_orphan_postgres_sequences(connection)
+                    Base.metadata.create_all(bind=connection)
+                    _add_missing_columns(connection)
+                finally:
+                    connection.exec_driver_sql("SELECT pg_advisory_unlock(424242)")
+        else:
+            with engine.begin() as connection:
                 Base.metadata.create_all(bind=connection)
                 _add_missing_columns(connection)
-            finally:
-                connection.exec_driver_sql("SELECT pg_advisory_unlock(424242)")
-    else:
-        with engine.begin() as connection:
-            Base.metadata.create_all(bind=connection)
-            _add_missing_columns(connection)
+    except OperationalError as exc:
+        _log_database_connection_failure(exc)
+        raise
 
     seed_default_users()
 

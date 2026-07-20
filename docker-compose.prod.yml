@@ -26,6 +26,11 @@ services:
       APP_ENV: ${APP_ENV:-production}
       JWT_SECRET: ${JWT_SECRET:?JWT_SECRET is required}
       TOKEN_EXPIRE_MINUTES: ${TOKEN_EXPIRE_MINUTES:-60}
+      # Must stay in sync with postgres's POSTGRES_USER/POSTGRES_PASSWORD/
+      # POSTGRES_DB below -- see the note above the postgres service for why
+      # changing this alone does not change what PostgreSQL will accept.
+      # scripts/deploy.sh runs backend/db_preflight.py to verify this before
+      # the backend container is recreated on every deploy.
       DATABASE_URL: ${DATABASE_URL:?DATABASE_URL is required}
       REDIS_URL: ${REDIS_URL:-redis://redis:6379/0}
       DONATIONS_CACHE_TTL_SECONDS: ${DONATIONS_CACHE_TTL_SECONDS:-30}
@@ -76,6 +81,21 @@ services:
 
   postgres:
     image: postgres:16-alpine
+    # IMPORTANT -- read before changing POSTGRES_PASSWORD:
+    # The official postgres image only applies POSTGRES_USER/POSTGRES_PASSWORD/
+    # POSTGRES_DB the FIRST time it initializes an empty postgres_data volume
+    # (initdb). On every later container start/recreate against an EXISTING
+    # volume, these variables are ignored -- Postgres logs "database directory
+    # appears to contain a database; skipping initialization" and keeps
+    # whatever role password was set the day the volume was first created.
+    # Editing POSTGRES_PASSWORD here (or in .env.production) after that point
+    # does NOT change the real, stored password. If you need to rotate it,
+    # you must also run, inside the running postgres container:
+    #   ALTER ROLE postgres WITH PASSWORD '<new value>';
+    # (or the equivalent \password in psql) -- see
+    # docs/deployment-database-credentials.md and the README troubleshooting
+    # section for the full, safe procedure. Never delete this volume to
+    # "reset" the password -- that destroys production data.
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-donations}
       POSTGRES_USER: ${POSTGRES_USER:-postgres}
